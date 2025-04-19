@@ -2,3 +2,9 @@ name = "NonaNats"
 uuid = "c8b5cb7c-27b6-4d11-a0a3-fa5894ee7abb"
 authors = ["Erik Edin <erikedin@users.noreply.github.com>"]
 version = "0.1.0"
+
+[deps]
+NATS = "55e73f9c-eeeb-467f-b4cc-a633fde63d2a"
+
+[compat]
+NATS = "0.1.0"
