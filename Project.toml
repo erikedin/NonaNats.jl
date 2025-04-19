@@ -5,6 +5,7 @@ version = "0.1.0"
 
 [deps]
 NATS = "55e73f9c-eeeb-467f-b4cc-a633fde63d2a"
+Nona = "7254a289-397f-4d9a-98af-a20f5b3a573c"
 
 [compat]
 NATS = "0.1.0"
