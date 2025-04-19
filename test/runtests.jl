@@ -31,7 +31,11 @@ end
 
 struct MockPublisher <: NatsPublisher
     events
+
+    MockPublisher() = new([])
 end
+
+NonaNats.publish!(p::MockPublisher, ev::NatsEvent) = push!(p.events, ev)
 
 function uniqueevent(publisher::MockPublisher, subj::String, evtype::String)
     matchingevents = [
@@ -59,7 +63,7 @@ end
     receive!(service, guess)
 
     # Assert
-    response = uniqueevent(publisher, "game.niancat.instance.cafe", "guess")
+    response = uniqueevent(publisher, "game.niancat.instance.cafe", "correct")
     @test response.player == alice
     @test response.guess == Guess(Word("PUSSGURKA"))
 end
