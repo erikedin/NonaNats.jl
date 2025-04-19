@@ -1,5 +1,7 @@
 module NonaNats
 
+using Nona.Games
+
 export NatsPublisher, NatsEvent
 export GameService
 export subject, eventtype
@@ -21,6 +23,8 @@ publish!(p::NatsPublisher, ev::NatsEvent) = @error("Implement publish!(::$(typeo
 #
 struct CorrectEvent <: NatsEvent
     subject::String
+    player::Player
+    guess::Guess
 end
 
 eventtype(::CorrectEvent) = "correct"
@@ -33,7 +37,9 @@ struct NewGameEvent
 end
 
 struct GuessEvent
-    GuessEvent(args...) = new()
+    player::Player
+
+    GuessEvent(player, args...) = new(player)
 end
 
 
@@ -41,6 +47,7 @@ struct GameService
     publisher::NatsPublisher
 end
 
+receive!(service::GameService, guess::GuessEvent) = publish!(service.publisher, CorrectEvent("game.niancat.instance.cafe", guess.player, Guess(Word("PUSSGURKA"))))
 receive!(::GameService, ev) = nothing
 
 end # module NonaNats
