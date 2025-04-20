@@ -49,7 +49,9 @@ struct MockPublisher <: NatsPublisher
     MockPublisher() = new([])
 end
 
-NonaNats.publish!(p::MockPublisher, ev::NatsEvent) = push!(p.events, ev)
+function NonaNats.publish!(p::MockPublisher, ev::NatsEvent)
+    push!(p.events, ev)
+end
 
 function uniqueevent(publisher::MockPublisher, subj::String, evtype::String)
     matchingevents = [
@@ -58,6 +60,10 @@ function uniqueevent(publisher::MockPublisher, subj::String, evtype::String)
         if subject(ev) == subj && eventtype(ev) == evtype
     ]
     only(matchingevents)
+end
+
+function showevents(publisher::MockPublisher)
+    show(publisher.events)
 end
 
 # Reads a table with two columns as a key/value table,
@@ -92,7 +98,7 @@ end
 
 @given("a new Niancat instance with puzzle \"{String}\" and id \"{String}\"") do context, puzzle, instanceid
     service = context[:service]
-    newgame = NewGameEvent(puzzle, instanceid)
+    newgame = NewGameEvent(puzzle, InstanceId(instanceid))
     receive!(service, newgame)
 end
 
@@ -101,7 +107,7 @@ end
     players = context[:players]
     alice = players[playername]
 
-    guess = GuessEvent(alice, "PUSSGURKA", instanceid)
+    guess = GuessEvent(alice, "PUSSGURKA", InstanceId(instanceid))
     receive!(service, guess)
 end
 
@@ -115,4 +121,15 @@ end
 
     @expect event.player.name == fields["player"]
     @expect event.guess == Guess(fields["word"])
+end
+
+@then("an error log event is published with") do context
+    publisher = context[:publisher]
+
+    fields = associativetable(context)
+    subject = fields["subject"]
+
+    event = uniqueevent(publisher, subject, "error")
+
+    @expect contains(event.message, fields["message"])
 end
