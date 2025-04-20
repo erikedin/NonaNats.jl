@@ -45,3 +45,12 @@ Feature: Guessing words in Niancat
             | subject | game.niancat.instance.babe |
             | player  | Alice                      |
             | word    | PUSSGURKA                  |
+
+    Scenario: Guess incorrectly
+        Given a new Niancat instance with puzzle "ORDPUSSEL" and id "cafe"
+         When the player Alice guesses PUSSGURKA in instance "cafe"
+         Then an Incorrect event is published with
+            | subject | game.niancat.instance.cafe |
+            | player  | Alice                      |
+            | word    | PUSSGURKA                  |
+          And there is no "correct" events in "game.niancat.instance.cafe"

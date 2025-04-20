@@ -13,13 +13,12 @@ export
     InstanceId
 
 #
-# Niancat specific interfaces
-#
-struct NatsNiancatPublisher <: Publisher{NiancatGame} end
-
-#
 # NATS
 #
+
+struct InstanceId
+    value::String
+end
 
 abstract type NatsEvent end
 subject(ev::NatsEvent) = ev.subject
@@ -40,6 +39,14 @@ end
 
 eventtype(::CorrectEvent) = "correct"
 
+struct IncorrectEvent <: NatsEvent
+    subject::String
+    player::Player
+    guess::Guess
+end
+
+eventtype(::IncorrectEvent) = "incorrect"
+
 #
 # Error and log events
 #
@@ -54,12 +61,28 @@ end
 eventtype(::ErrorEvent) = "error"
 
 #
-# Game service
+# Niancat specific interfaces
 #
-struct InstanceId
-    value::String
+struct NatsNiancatPublisher <: Publisher{NiancatGame}
+    natspub::NatsPublisher
+    instanceid::InstanceId
 end
 
+instancesubject(instanceid::InstanceId) = "game.niancat.instance.$(instanceid)"
+
+function Games.publish!(publisher::NatsNiancatPublisher, ev::Niancat.Correct)
+    subject = instancesubject(publisher.instanceid)
+    publish!(publisher.natspub, CorrectEvent(subject, ev.player, ev.guess))
+end
+function Games.publish!(publisher::NatsNiancatPublisher, ev::Niancat.Incorrect)
+    subject = instancesubject(publisher.instanceid)
+    publish!(publisher.natspub, IncorrectEvent(subject, ev.player, ev.guess))
+end
+Games.publish!(publisher::NatsNiancatPublisher, ev::Games.Response) = @error("Yo")
+
+#
+# Game service
+#
 Base.show(io::IO, instanceid::InstanceId) = print(io, instanceid.value)
 
 struct NewGameEvent
@@ -82,13 +105,13 @@ struct GameInstances
     GameInstances(dictionary::Dictionary) = new(Dict{InstanceId, NiancatGame}(), dictionary)
 end
 
-function new!(gi::GameInstances, instanceid::InstanceId, puzzle::String)
-    niancatpublisher = NatsNiancatPublisher()
+function new!(gi::GameInstances, publisher::NatsPublisher, instanceid::InstanceId, puzzle::String)
+    niancatpublisher = NatsNiancatPublisher(publisher, instanceid)
     game = NiancatGame(Word(puzzle), niancatpublisher, gi.dictionary)
     gi.instances[instanceid] = game
 end
 
-function find(gi::GameInstances, instanceid::InstanceId)
+function find(gi::GameInstances, instanceid::InstanceId) :: Game
     try
         gi.instances[instanceid]
     catch
@@ -105,10 +128,13 @@ end
 
 function receive!(service::GameService, guess::GuessEvent)
     try
-        _gameinstance = find(service.instances, guess.instanceid)
-        subject = "game.niancat.instance.$(guess.instanceid)"
-        publish!(service.publisher,
-            CorrectEvent(subject, guess.player, Guess(Word("PUSSGURKA"))))
+        game = find(service.instances, guess.instanceid)
+        #subject = "game.niancat.instance.$(guess.instanceid)"
+        # publish!(service.publisher,
+        #     CorrectEvent(subject, guess.player, Guess(Word("PUSSGURKA"))))
+        # publish!(service.publisher,
+        #     IncorrectEvent(subject, guess.player, Guess(Word("PUSSGURKA"))))
+        gameaction!(game, guess.player, Guess(Word(guess.word)))
     catch ex
         if isa(ex, NoSuchGameInstanceError)
             publish!(service.publisher, ErrorEvent("Unknown service \"$(guess.instanceid.value)\""))
@@ -119,7 +145,7 @@ function receive!(service::GameService, guess::GuessEvent)
 end
 
 function receive!(service::GameService, newgame::NewGameEvent)
-    new!(service.instances, newgame.instanceid, newgame.puzzle)
+    new!(service.instances, service.publisher, newgame.instanceid, newgame.puzzle)
 end
 receive!(::GameService, ev) = nothing
 

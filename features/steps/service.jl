@@ -66,6 +66,14 @@ function showevents(publisher::MockPublisher)
     show(publisher.events)
 end
 
+function findevents(publisher::MockPublisher, subj::String, evtype::String)
+    [
+        ev
+        for ev in publisher.events
+        if subject(ev) == subj && eventtype(ev) == evtype
+    ]
+end
+
 # Reads a table with two columns as a key/value table,
 # and produces a Dict from it.
 function associativetable(context)
@@ -102,12 +110,12 @@ end
     receive!(service, newgame)
 end
 
-@when("the player {String} guesses PUSSGURKA in instance \"{String}\"") do context, playername, instanceid
+@when("the player {String} guesses {String} in instance \"{String}\"") do context, playername, word, instanceid
     service = context[:service]
     players = context[:players]
     alice = players[playername]
 
-    guess = GuessEvent(alice, "PUSSGURKA", InstanceId(instanceid))
+    guess = GuessEvent(alice, word, InstanceId(instanceid))
     receive!(service, guess)
 end
 
@@ -123,6 +131,18 @@ end
     @expect event.guess == Guess(fields["word"])
 end
 
+@then("an Incorrect event is published with") do context
+    publisher = context[:publisher]
+
+    fields = associativetable(context)
+    subject = fields["subject"]
+
+    event = uniqueevent(publisher, subject, "incorrect")
+
+    @expect event.player.name == fields["player"]
+    @expect event.guess == Guess(fields["word"])
+end
+
 @then("an error log event is published with") do context
     publisher = context[:publisher]
 
@@ -132,4 +152,10 @@ end
     event = uniqueevent(publisher, subject, "error")
 
     @expect contains(event.message, fields["message"])
+end
+
+@then("there is no \"{String}\" events in \"{String}\"") do context, evtype, subject
+    publisher = context[:publisher]
+    events = findevents(publisher, subject, evtype)
+    @expect events == []
 end
