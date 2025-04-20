@@ -38,8 +38,10 @@ end
 
 struct GuessEvent
     player::Player
+    word::String
+    instanceid::String
 
-    GuessEvent(player, args...) = new(player)
+    GuessEvent(player::Player, word::String, instanceid::String) = new(player, word, instanceid)
 end
 
 
@@ -49,8 +51,9 @@ struct GameService
 end
 
 function receive!(service::GameService, guess::GuessEvent)
+    subject = "game.niancat.instance.$(guess.instanceid)"
     publish!(service.publisher,
-        CorrectEvent("game.niancat.instance.cafe", guess.player, Guess(Word("PUSSGURKA"))))
+        CorrectEvent(subject, guess.player, Guess(Word("PUSSGURKA"))))
 end
 receive!(::GameService, ev) = nothing
 

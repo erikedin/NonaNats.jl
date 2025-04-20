@@ -96,12 +96,12 @@ end
     receive!(service, newgame)
 end
 
-@when("the player {String} guesses PUSSGURKA") do context, playername
+@when("the player {String} guesses PUSSGURKA in instance \"{String}\"") do context, playername, instanceid
     service = context[:service]
     players = context[:players]
     alice = players[playername]
 
-    guess = GuessEvent(alice, "PUSSGURKA", "cafe")
+    guess = GuessEvent(alice, "PUSSGURKA", instanceid)
     receive!(service, guess)
 end
 

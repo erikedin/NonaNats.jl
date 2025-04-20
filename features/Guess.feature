@@ -32,8 +32,16 @@ Feature: Guessing words in Niancat
 
     Scenario: Guess correctly
         Given a new Niancat instance with puzzle "PUSSGURKA" and id "cafe"
-         When the player Alice guesses PUSSGURKA
+         When the player Alice guesses PUSSGURKA in instance "cafe"
          Then a Correct event is published with
             | subject | game.niancat.instance.cafe |
+            | player  | Alice                      |
+            | word    | PUSSGURKA                  |
+
+    Scenario: Guess correctly with different instance id
+        Given a new Niancat instance with puzzle "PUSSGURKA" and id "babe"
+         When the player Alice guesses PUSSGURKA in instance "babe"
+         Then a Correct event is published with
+            | subject | game.niancat.instance.babe |
             | player  | Alice                      |
             | word    | PUSSGURKA                  |
