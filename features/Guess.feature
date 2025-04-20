@@ -20,13 +20,20 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-using Test
-using Behavior
-using NonaNats
+Feature: Guessing words in Niancat
 
-parseoptions = Behavior.Gherkin.ParseOptions(use_experimental=true)
-@test runspec(
-    pkgdir(NonaNats),
-    tags="not @wip",
-    presenter=Behavior.TerseRealTimePresenter(Behavior.ColorConsolePresenter()),
-    parseoptions=parseoptions)
+    Background: A dictionary
+        Given a dictionary
+            | DATORSPEL |
+            | LEDARPOST |
+            | PUSSGURKA |
+            | ORDPUSSEL |
+          And a Niancat game service
+
+    Scenario: Guess correctly
+        Given a new Niancat instance with puzzle "PUSSGURKA" and id "cafe"
+         When the player Alice guesses PUSSGURKA
+         Then a Correct event is published with
+            | subject | game.niancat.instance.cafe |
+            | player  | Alice                      |
+            | word    | PUSSGURKA                  |

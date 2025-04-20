@@ -20,13 +20,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-using Test
 using Behavior
-using NonaNats
+using Nona.Games
 
-parseoptions = Behavior.Gherkin.ParseOptions(use_experimental=true)
-@test runspec(
-    pkgdir(NonaNats),
-    tags="not @wip",
-    presenter=Behavior.TerseRealTimePresenter(Behavior.ColorConsolePresenter()),
-    parseoptions=parseoptions)
+struct NamedPlayer <: Player
+    name::String
+end
+
+@beforescenario() do context, scenario
+    players = Dict{String, NamedPlayer}(
+        "Alice" => NamedPlayer("Alice")
+    )
+    context[:players] = players
+end

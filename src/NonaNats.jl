@@ -45,9 +45,13 @@ end
 
 struct GameService
     publisher::NatsPublisher
+    dictionary::Dictionary
 end
 
-receive!(service::GameService, guess::GuessEvent) = publish!(service.publisher, CorrectEvent("game.niancat.instance.cafe", guess.player, Guess(Word("PUSSGURKA"))))
+function receive!(service::GameService, guess::GuessEvent)
+    publish!(service.publisher,
+        CorrectEvent("game.niancat.instance.cafe", guess.player, Guess(Word("PUSSGURKA"))))
+end
 receive!(::GameService, ev) = nothing
 
 end # module NonaNats
