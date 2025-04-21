@@ -23,7 +23,7 @@
 # SOFTWARE.
 #
 
-# Activate the Nona environment automatically, from the path of this script,
+# Activate the project environment automatically, from the path of this script,
 # not where the user is running the script from.
 using Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
@@ -38,17 +38,6 @@ function requiredconfig(filename)
     path = configpath(filename)
     open(path, "r") do io
         strip(read(io, String))
-    end
-end
-
-function optionalconfig(filename, defaultvalue)
-    path = configpath(filename)
-    try
-        open(path, "r") do io
-            String(strip(read(io, String)))
-        end
-    catch
-        defaultvalue
     end
 end
 

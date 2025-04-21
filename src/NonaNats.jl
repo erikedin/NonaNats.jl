@@ -129,11 +129,6 @@ end
 function receive!(service::GameService, guess::GuessEvent)
     try
         game = find(service.instances, guess.instanceid)
-        #subject = "game.niancat.instance.$(guess.instanceid)"
-        # publish!(service.publisher,
-        #     CorrectEvent(subject, guess.player, Guess(Word("PUSSGURKA"))))
-        # publish!(service.publisher,
-        #     IncorrectEvent(subject, guess.player, Guess(Word("PUSSGURKA"))))
         gameaction!(game, guess.player, Guess(Word(guess.word)))
     catch ex
         if isa(ex, NoSuchGameInstanceError)
