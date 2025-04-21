@@ -1,5 +1,3 @@
-#!/usr/bin/env -S julia --threads 3,1
-#
 # MIT License
 #
 # Copyright (c) 2024 Erik Edin
@@ -23,45 +21,48 @@
 # SOFTWARE.
 #
 
-# Activate the project environment automatically, from the path of this script,
-# not where the user is running the script from.
-using Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
-Pkg.instantiate()
-
-function configpath(filename)
-    dirpath = expanduser("~/.config/NonaNats")
-    joinpath(dirpath, filename)
-end
-
-function requiredconfig(filename)
-    path = configpath(filename)
-    open(path, "r") do io
-        strip(read(io, String))
-    end
-end
-
-function waitforkeypress(prompt)
-    print(stdout, prompt)
-    read(stdin, 1)
-    nothing
-end
-
-# Read the dictionary path from the config file.
-dictionarypath = requiredconfig("dictionarypath.txt")
-
-using Nona.NonaREPLs
+using Behavior
 using NonaNats
-using NATS
 using JSON
 
-dictionary = FileDictionary(String(dictionarypath))
+const eventtypes = Dict{String, Type}(
+    "NewGameEvent" => NewGameEvent,
+)
 
-nc = NATS.connect()
-
-sub = subscribe(nc, "game.niancat.lifetime") do message
-    p = JSON.parse(payload(message))
-    @show p
+# Reads a table with two columns as a key/value table,
+# and produces a Dict from it.
+function associativetable(context)
+    keyvalues = [
+        (row[1], row[2])
+        for row in context.datatable
+    ]
+    Dict{String, String}(keyvalues)
 end
 
-waitforkeypress("Press any key to exit...")
+@given("a payload on the subject '{String}'") do context, subject
+
+end
+
+@when("the message is translated") do context
+    subject = context[:subject]
+    payload = context[:payload]
+    ev = NonaNats.translate(subject, payload)
+
+    context[:event] = ev
+end
+
+@then("it is a {String} with fields") do context, eventtypename
+    ev = context[:event]
+
+    # This is the table of fields that should be checked.
+    fields = associativetable(context)
+
+    # The event type is found via the eventtypes lookup table.
+    expectedtype = eventtypes[eventtypename]
+
+    @expect typeof(ev) == expectedtype
+    for field in fields
+        # TODO Check fields
+        @expect false
+    end
+end

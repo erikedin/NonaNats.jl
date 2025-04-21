@@ -5,10 +5,12 @@ version = "0.1.0"
 
 [deps]
 Behavior = "7a129280-419d-58e9-81ef-4f6801251892"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 NATS = "55e73f9c-eeeb-467f-b4cc-a633fde63d2a"
 Nona = "7254a289-397f-4d9a-98af-a20f5b3a573c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
+JSON = "0.21.4"
 NATS = "0.1.0"
 Test = "1.11.0"

@@ -1,5 +1,3 @@
-#!/usr/bin/env -S julia --threads 3,1
-#
 # MIT License
 #
 # Copyright (c) 2024 Erik Edin
@@ -23,45 +21,20 @@
 # SOFTWARE.
 #
 
-# Activate the project environment automatically, from the path of this script,
-# not where the user is running the script from.
-using Pkg
-Pkg.activate(joinpath(@__DIR__, ".."))
-Pkg.instantiate()
+Feature: Message parsing
 
-function configpath(filename)
-    dirpath = expanduser("~/.config/NonaNats")
-    joinpath(dirpath, filename)
-end
+    # TODO
+    # - Hardcode a JSON message NewGameEvent
+    # - Serialize it to bytes
+    # - Translate the subject/payload pair to a service message
+    # - Check that the message matches expectations
 
-function requiredconfig(filename)
-    path = configpath(filename)
-    open(path, "r") do io
-        strip(read(io, String))
-    end
-end
-
-function waitforkeypress(prompt)
-    print(stdout, prompt)
-    read(stdin, 1)
-    nothing
-end
-
-# Read the dictionary path from the config file.
-dictionarypath = requiredconfig("dictionarypath.txt")
-
-using Nona.NonaREPLs
-using NonaNats
-using NATS
-using JSON
-
-dictionary = FileDictionary(String(dictionarypath))
-
-nc = NATS.connect()
-
-sub = subscribe(nc, "game.niancat.lifetime") do message
-    p = JSON.parse(payload(message))
-    @show p
-end
-
-waitforkeypress("Press any key to exit...")
+    Scenario: NewGameEvent
+        Given a payload on the subject ''
+            """
+            {"event": "newgame", "puzzle": "PUSSGURKA"}
+            """
+         When the message is translated
+         Then it is a NewGameEvent with fields
+            | puzzle     | PUSSGURKA |
+            | instanceid | cafe      |
